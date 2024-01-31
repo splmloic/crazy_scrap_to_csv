@@ -1,4 +1,3 @@
-
 class Scrapper
     def get_townhall_urls
         city = Nokogiri::HTML(URI.open"https://annuaire-des-mairies.com/95/")
@@ -27,13 +26,35 @@ class Scrapper
               }
               townhall_info << townhall_info_hash
         end
+        save_as_JSON(townhall_info)
         return townhall_info
     end
     
+    def save_as_JSON(data)
+        File.open('db/emails.json', 'w') do |f|
+            f.write(JSON.pretty_generate(data))
+          end
+    end
+
+    def save_as_csv(data)
+        CSV.open('db/emails.csv', 'w') do |csv|
+            # Écriture de l'en-tête du CSV avec les noms de colonnes
+            csv << ["Ville", "Email"]
+        
+            data.each do |hash|
+              # Utilisation de hash.each pour s'assurer de l'ordre des colonnes
+              hash.each do |ville, email|
+                csv << [ville, email]
+              end
+            end
+        end
+    end
     def perform
         town_url = get_townhall_urls
         townhall_info = get_townhall_email(town_url)
+        save_as_JSON(townhall_info)
+        save_as_csv(townhall_info)
         puts townhall_info
     end
-    
+
 end
